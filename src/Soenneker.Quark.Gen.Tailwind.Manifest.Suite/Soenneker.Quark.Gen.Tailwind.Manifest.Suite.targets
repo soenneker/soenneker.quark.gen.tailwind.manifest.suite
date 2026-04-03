@@ -1,0 +1,40 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Target Name="TailwindManifestSuiteGeneratorBuild_Imported" BeforeTargets="Build">
+        <Message Importance="high" Text="Soenneker.Quark.Gen.Tailwind.Manifest.Suite targets imported from: $(MSBuildThisFileFullPath)" />
+    </Target>
+
+    <PropertyGroup>
+        <_TailwindManifestSuiteBuildTasksDllFromPackage>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll'))</_TailwindManifestSuiteBuildTasksDllFromPackage>
+        <_TailwindManifestSuiteBuildTasksDllFromBuildTransitive>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', '..', 'buildTransitive', 'Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll'))))</_TailwindManifestSuiteBuildTasksDllFromBuildTransitive>
+        <_TailwindManifestSuiteBuildTasksDllFromProject>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', '..', 'Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks', 'bin', '$(Configuration)', 'Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll'))))</_TailwindManifestSuiteBuildTasksDllFromProject>
+        <TailwindManifestSuiteBuildTasksDllPath Condition="'$(TailwindManifestSuiteBuildTasksDllPath)'=='' and Exists('$(_TailwindManifestSuiteBuildTasksDllFromPackage)')">$(_TailwindManifestSuiteBuildTasksDllFromPackage)</TailwindManifestSuiteBuildTasksDllPath>
+        <TailwindManifestSuiteBuildTasksDllPath Condition="'$(TailwindManifestSuiteBuildTasksDllPath)'=='' and Exists('$(_TailwindManifestSuiteBuildTasksDllFromBuildTransitive)')">$(_TailwindManifestSuiteBuildTasksDllFromBuildTransitive)</TailwindManifestSuiteBuildTasksDllPath>
+        <TailwindManifestSuiteBuildTasksDllPath Condition="'$(TailwindManifestSuiteBuildTasksDllPath)'=='' and Exists('$(_TailwindManifestSuiteBuildTasksDllFromProject)')">$(_TailwindManifestSuiteBuildTasksDllFromProject)</TailwindManifestSuiteBuildTasksDllPath>
+        <TailwindManifestSuiteGeneratorBuildEnabled Condition="'$(TailwindManifestSuiteGeneratorBuildEnabled)'==''">true</TailwindManifestSuiteGeneratorBuildEnabled>
+        <_TailwindManifestSuiteProjectDir>$([System.IO.Path]::GetDirectoryName('$(ProjectDir)x'))</_TailwindManifestSuiteProjectDir>
+        <_TailwindManifestSuiteProjectDir Condition="'$(_TailwindManifestSuiteProjectDir)' == ''">$(MSBuildProjectDirectory)</_TailwindManifestSuiteProjectDir>
+        <TailwindManifestSuiteOutput Condition="'$(TailwindManifestSuiteOutput)' == ''">$([System.IO.Path]::Combine('$(_TailwindManifestSuiteProjectDir)', 'tailwind', 'quark-suite-tailwind-manifest.txt'))</TailwindManifestSuiteOutput>
+        <_TailwindManifestSuiteOutputArg Condition="'$(TailwindManifestSuiteOutput)' != ''"> --manifestOutput &quot;$(TailwindManifestSuiteOutput)&quot;</_TailwindManifestSuiteOutputArg>
+    </PropertyGroup>
+
+    <Target Name="RunTailwindManifestSuiteGeneratorBuildTasks"
+            BeforeTargets="Build"
+            Condition="'$(DesignTimeBuild)'!='true' and '$(IsCrossTargetingBuild)'!='true' and '$(TailwindManifestSuiteGeneratorBuildEnabled)'=='true'">
+
+        <Message Importance="high" Text="Running Soenneker.Quark.Gen.Tailwind.Manifest.Suite BuildTasks: projectDir=$(_TailwindManifestSuiteProjectDir) output=$(TailwindManifestSuiteOutput)" />
+        <Error Condition="'$(_TailwindManifestSuiteProjectDir)' == ''"
+               Text="Soenneker.Quark.Gen.Tailwind.Manifest.Suite: project directory could not be resolved (ProjectDir and MSBuildProjectDirectory are empty)." />
+        <Error Condition="'$(TailwindManifestSuiteBuildTasksDllPath)'==''"
+               Text="TailwindManifestSuiteBuildTasksDllPath was not resolved. MSBuildThisFileDirectory=$(MSBuildThisFileDirectory)" />
+        <Error Condition="!Exists('$(TailwindManifestSuiteBuildTasksDllPath)')"
+               Text="Tailwind.Manifest.Suite BuildTasks DLL not found at '$(TailwindManifestSuiteBuildTasksDllPath)'." />
+
+        <Exec WorkingDirectory="$(_TailwindManifestSuiteProjectDir)"
+              IgnoreExitCode="false"
+              ConsoleToMSBuild="true"
+              StandardOutputImportance="high"
+              StandardErrorImportance="high"
+              Command='dotnet exec &quot;$(TailwindManifestSuiteBuildTasksDllPath)&quot; --projectDir &quot;$(_TailwindManifestSuiteProjectDir)&quot;$(_TailwindManifestSuiteOutputArg)' />
+    </Target>
+</Project>
