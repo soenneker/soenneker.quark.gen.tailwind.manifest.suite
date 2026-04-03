@@ -62,9 +62,10 @@
     </ItemGroup>
 
     <Target Name="BuildBuildTasksToolOnBuild"
-            BeforeTargets="Build">
+            BeforeTargets="Build"
+            Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')">
 
-        <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Build" Properties="Configuration=$(Configuration)" BuildInParallel="true" />
+        <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);NoBuild=false" BuildInParallel="true" />
     </Target>
 
     <Target Name="BuildBuildTasksTool" BeforeTargets="Pack" Condition="'$(IsPackable)' == 'true'">

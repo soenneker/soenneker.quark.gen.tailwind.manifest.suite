@@ -1,7 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Soenneker.Quark.Gen.Tailwind.Manifest.BuildTasks;
-using Soenneker.Quark.Gen.Tailwind.Manifest.BuildTasks.Abstract;
 using Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.Abstract;
 using Soenneker.Utils.Directory.Registrars;
 using Soenneker.Utils.File.Registrars;
@@ -14,8 +11,7 @@ public static class Startup
     {
         services.AddFileUtilAsScoped()
                 .AddDirectoryUtilAsScoped();
-        services.TryAddScoped<IQuarkTailwindManifestGenerator, QuarkTailwindManifestGenerator>();
-        services.TryAddScoped<ITailwindManifestSuiteGeneratorWriteRunner, TailwindManifestSuiteGeneratorWriteRunner>();
+        services.AddScoped<ITailwindManifestSuiteGeneratorWriteRunner, TailwindManifestSuiteGeneratorWriteRunner>();
         services.AddHostedService<ConsoleHostedService>();
     }
 }

@@ -14,9 +14,9 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\..\soenneker.quark.gen.tailwind.manifest\src\Soenneker.Quark.Gen.Tailwind.Manifest.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.BuildTasks.csproj" />
+        <PackageReference Include="Soenneker.Extensions.ValueTask" Version="4.0.113" />
+        <PackageReference Include="Soenneker.Quark.Builders" Version="4.0.4" />
+        <PackageReference Include="Soenneker.Utils.Directory" Version="4.0.838" />
+        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2136" />
     </ItemGroup>
 </Project>
