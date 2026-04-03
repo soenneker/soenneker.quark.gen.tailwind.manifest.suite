@@ -58,6 +58,11 @@ jobs:
       - name: Test
         run: dotnet test test/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.Tests/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.Tests.csproj --configuration Release --no-build --no-restore --verbosity normal
 
+      - name: Restore BuildTasks
+        run: dotnet restore src/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj --verbosity minimal
+
+      - name: Build BuildTasks
+        run: dotnet build src/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj --configuration Release --no-restore --verbosity minimal
 
       - name: Restore library
         run: dotnet restore src/Soenneker.Quark.Gen.Tailwind.Manifest.Suite/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.csproj --verbosity minimal
