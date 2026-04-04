@@ -23,8 +23,6 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
     private const string _suiteManifestFileName = "quark-suite-tailwind-manifest.txt";
     private static readonly string[] _responsivePrefixes = ["", "sm:", "md:", "lg:", "xl:", "2xl:"];
     private readonly record struct ChainSegment(string Name, List<string> Args);
-    private const int _runtimeBuilderExpansionDepth = 2;
-
     [GeneratedRegex(
         @"\[(?<attr>[^\]]*TailwindPrefix[^\]]*)\]\s*(?:(?:public|internal|private|protected)\s+)?(?:sealed\s+)?class\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\b(?<after>[^{]*)\{",
         RegexOptions.Singleline)]
@@ -132,15 +130,12 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
 
         var uniqueLines = new HashSet<string>(StringComparer.Ordinal);
         var totalFilesScanned = 0;
-        var runtimeBuilderClasses = 0;
         var tailwindPrefixClasses = 0;
         var componentCodeClasses = 0;
         var razorClasses = 0;
         var csSources = new List<(string File, string Text)>();
         var razorSources = new List<(string File, string Text)>();
         Dictionary<string, Type> runtimeRoots = CollectRuntimeFluentRoots();
-
-        runtimeBuilderClasses += AddRuntimeBuilderManifestClasses(uniqueLines, runtimeRoots);
 
         List<string> csFiles = await _directoryUtil.GetFilesByExtension(sourceRoot, ".cs", recursive: true, cancellationToken)
                                                    .NoSync();
@@ -196,8 +191,8 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         final.Sort(StringComparer.Ordinal);
 
         _logger.LogInformation(
-            "Suite Tailwind manifest scan complete: {FileCount} files scanned, {ClassCount} class names (RuntimeBuilders={RuntimeBuilderCount}, TailwindPrefix={TailwindPrefixCount}, ComponentCode={ComponentCodeCount}, Razor={RazorCount}), output {OutputPath}.",
-            totalFilesScanned, final.Count, runtimeBuilderClasses, tailwindPrefixClasses, componentCodeClasses, razorClasses, outputPath);
+            "Suite Tailwind manifest scan complete: {FileCount} files scanned, {ClassCount} class names (TailwindPrefix={TailwindPrefixCount}, ComponentCode={ComponentCodeCount}, Razor={RazorCount}), output {OutputPath}.",
+            totalFilesScanned, final.Count, tailwindPrefixClasses, componentCodeClasses, razorClasses, outputPath);
 
         if (final.Count > 0)
         {
@@ -356,125 +351,6 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         }
 
         return result;
-    }
-
-    private static int AddRuntimeBuilderManifestClasses(HashSet<string> uniqueLines, Dictionary<string, Type> runtimeRoots)
-    {
-        var added = 0;
-
-        foreach ((string rootName, Type rootType) in runtimeRoots)
-        {
-            if (!IsStaticContainerType(rootType))
-                continue;
-
-            var rootChains = new List<List<ChainSegment>>();
-            CollectRuntimeRootChains(rootType, new List<ChainSegment>(), rootChains);
-
-            foreach (List<ChainSegment> rootChain in rootChains)
-            {
-                added += AddRuntimeChainClasses(uniqueLines, runtimeRoots, rootName, rootChain);
-
-                if (!TryEvaluateRuntimeChain(runtimeRoots, rootName, rootChain, out _, out Type? builderType) || builderType is null)
-                    continue;
-
-                List<ChainSegment> builderMembers = GetRuntimeBuilderSegments(builderType);
-                if (builderMembers.Count == 0)
-                    continue;
-
-                ExpandRuntimeBuilderChains(uniqueLines, runtimeRoots, rootName, rootChain, builderMembers, _runtimeBuilderExpansionDepth, ref added);
-            }
-        }
-
-        return added;
-    }
-
-    private static void ExpandRuntimeBuilderChains(HashSet<string> uniqueLines, Dictionary<string, Type> runtimeRoots, string rootName, List<ChainSegment> prefix,
-        List<ChainSegment> builderMembers, int remainingDepth, ref int added)
-    {
-        if (remainingDepth <= 0)
-            return;
-
-        foreach (ChainSegment member in builderMembers)
-        {
-            var next = new List<ChainSegment>(prefix.Count + 1);
-            next.AddRange(prefix);
-            next.Add(member);
-
-            added += AddRuntimeChainClasses(uniqueLines, runtimeRoots, rootName, next);
-            ExpandRuntimeBuilderChains(uniqueLines, runtimeRoots, rootName, next, builderMembers, remainingDepth - 1, ref added);
-        }
-    }
-
-    private static int AddRuntimeChainClasses(HashSet<string> uniqueLines, Dictionary<string, Type> runtimeRoots, string rootName, List<ChainSegment> segments)
-    {
-        if (!TryEvaluateRuntimeChain(runtimeRoots, rootName, segments, out List<string>? classes, out _))
-            return 0;
-
-        if (classes is null || classes.Count == 0)
-            return 0;
-
-        var set = new HashSet<string>(classes, StringComparer.Ordinal);
-        return AddManifestClasses(uniqueLines, set, responsive: false);
-    }
-
-    private static void CollectRuntimeRootChains(Type containerType, List<ChainSegment> prefix, List<List<ChainSegment>> results)
-    {
-        foreach (Type nestedType in containerType.GetNestedTypes(BindingFlags.Public))
-        {
-            if (!IsStaticContainerType(nestedType))
-                continue;
-
-            var nestedPrefix = new List<ChainSegment>(prefix.Count + 1);
-            nestedPrefix.AddRange(prefix);
-            nestedPrefix.Add(new ChainSegment(nestedType.Name, new List<string>()));
-            CollectRuntimeRootChains(nestedType, nestedPrefix, results);
-        }
-
-        foreach (PropertyInfo property in containerType.GetProperties(BindingFlags.Public | BindingFlags.Static))
-        {
-            if (property.GetIndexParameters().Length != 0 || property.GetMethod is null || !typeof(ICssBuilder).IsAssignableFrom(property.PropertyType))
-                continue;
-
-            var chain = new List<ChainSegment>(prefix.Count + 1);
-            chain.AddRange(prefix);
-            chain.Add(new ChainSegment(property.Name, new List<string>()));
-            results.Add(chain);
-        }
-
-        foreach (MethodInfo method in containerType.GetMethods(BindingFlags.Public | BindingFlags.Static))
-        {
-            if (method.IsSpecialName || method.GetParameters().Length != 0 || !typeof(ICssBuilder).IsAssignableFrom(method.ReturnType))
-                continue;
-
-            var chain = new List<ChainSegment>(prefix.Count + 1);
-            chain.AddRange(prefix);
-            chain.Add(new ChainSegment(method.Name, new List<string>()));
-            results.Add(chain);
-        }
-    }
-
-    private static List<ChainSegment> GetRuntimeBuilderSegments(Type builderType)
-    {
-        var results = new List<ChainSegment>();
-
-        foreach (PropertyInfo property in builderType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (property.GetIndexParameters().Length != 0 || property.GetMethod is null || property.PropertyType != builderType)
-                continue;
-
-            results.Add(new ChainSegment(property.Name, new List<string>()));
-        }
-
-        foreach (MethodInfo method in builderType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (method.IsSpecialName || method.GetParameters().Length != 0 || method.ReturnType != builderType)
-                continue;
-
-            results.Add(new ChainSegment(method.Name, new List<string>()));
-        }
-
-        results.Sort(static (a, b) => string.CompareOrdinal(a.Name, b.Name));
-        return results;
     }
 
     private static bool TryEvaluateRuntimeChain(Dictionary<string, Type> runtimeRoots, string root, List<ChainSegment> segments, out List<string>? classes,
@@ -743,11 +619,6 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         }
 
         return result;
-    }
-
-    private static bool IsStaticContainerType(Type type)
-    {
-        return type.IsClass && type.IsAbstract && type.IsSealed;
     }
 
     private static IEnumerable<(string Root, List<ChainSegment> Segments)> EnumerateFluentChains(string text)
