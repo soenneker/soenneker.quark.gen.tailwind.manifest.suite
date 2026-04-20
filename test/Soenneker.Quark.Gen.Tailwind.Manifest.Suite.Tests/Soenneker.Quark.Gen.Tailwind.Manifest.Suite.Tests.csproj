@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" />
         <ProjectReference Include="..\..\src\Soenneker.Quark.Gen.Tailwind.Manifest.Suite\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 

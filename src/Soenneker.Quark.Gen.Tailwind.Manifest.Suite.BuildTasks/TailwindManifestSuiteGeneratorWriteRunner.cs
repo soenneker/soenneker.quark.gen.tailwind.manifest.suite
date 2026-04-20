@@ -74,7 +74,6 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
 
     private static readonly SearchValues<char> _invalidTokenChars = SearchValues.Create("{};,");
     private static readonly SearchValues<char> _standaloneTokenSpecialChars = SearchValues.Create("-:/[]()!._");
-    private static readonly SearchValues<char> _disallowedInTailwindClass = SearchValues.Create("()'$=;,\" \t");
     private static readonly SearchValues<char> _validTailwindFirstChar = SearchValues.Create("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ![-:@");
 
     private readonly ILogger<TailwindManifestSuiteGeneratorWriteRunner> _logger;
@@ -1054,7 +1053,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         if (HasUnbracketedDot(token))
             return false;
 
-        if (token.IndexOfAny(_disallowedInTailwindClass) >= 0)
+        if (HasDisallowedTailwindChars(token))
             return false;
 
         if (token.Slice(0, 1)
@@ -1103,6 +1102,47 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
                     if (bracketDepth == 0)
                         return true;
                     break;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasDisallowedTailwindChars(ReadOnlySpan<char> token)
+    {
+        var bracketDepth = 0;
+
+        for (int i = 0; i < token.Length; i++)
+        {
+            char c = token[i];
+
+            switch (c)
+            {
+                case '[':
+                    bracketDepth++;
+                    continue;
+                case ']':
+                    if (bracketDepth > 0)
+                        bracketDepth--;
+                    continue;
+            }
+
+            if (bracketDepth > 0)
+                continue;
+
+            switch (c)
+            {
+                case '(':
+                case ')':
+                case '\'':
+                case '$':
+                case '=':
+                case ';':
+                case ',':
+                case '"':
+                case ' ':
+                case '\t':
+                    return true;
             }
         }
 
