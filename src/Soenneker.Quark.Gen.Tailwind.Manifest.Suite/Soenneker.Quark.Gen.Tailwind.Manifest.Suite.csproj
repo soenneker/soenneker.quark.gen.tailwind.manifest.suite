@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -48,7 +46,6 @@
     <ItemGroup>
         <None Include="Soenneker.Quark.Gen.Tailwind.Manifest.Suite.targets" Pack="true" PackagePath="build\" />
         <None Include="Soenneker.Quark.Gen.Tailwind.Manifest.Suite.targets" Pack="true" PackagePath="buildTransitive\" />
-
         <None Include="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\**\*.*" Pack="true" PackagePath="buildTransitive\%(RecursiveDir)" />
     </ItemGroup>
 
@@ -61,17 +58,12 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" PrivateAssets="all" />
     </ItemGroup>
 
-    <Target Name="BuildBuildTasksToolOnBuild"
-            BeforeTargets="Build"
-            Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')">
-
+    <Target Name="BuildBuildTasksToolOnBuild" BeforeTargets="Build" Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')">
         <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration);NoBuild=false" BuildInParallel="true" />
     </Target>
 
     <Target Name="BuildBuildTasksTool" BeforeTargets="Pack" Condition="'$(IsPackable)' == 'true'">
-
         <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Build" Properties="Configuration=$(Configuration);NoBuild=false" BuildInParallel="true" />
-
         <Error Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')" Text="BuildTasks output missing. Aborting pack to avoid publishing a broken package." />
     </Target>
 </Project>
