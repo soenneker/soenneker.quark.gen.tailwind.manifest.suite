@@ -16,6 +16,6 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
         <PackageReference Include="Soenneker.Quark.Builders" Version="4.0.22" />
         <PackageReference Include="Soenneker.Utils.Directory" Version="4.0.846" />
-        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2143" />
+        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2146" />
     </ItemGroup>
 </Project>
