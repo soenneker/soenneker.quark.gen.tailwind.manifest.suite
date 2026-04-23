@@ -9,9 +9,9 @@ public static class Startup
 {
     public static void ConfigureServices(IServiceCollection services)
     {
-        services.AddFileUtilAsScoped()
-                .AddDirectoryUtilAsScoped();
-        services.AddScoped<ITailwindManifestSuiteGeneratorWriteRunner, TailwindManifestSuiteGeneratorWriteRunner>();
+        services.AddFileUtilAsSingleton()
+                .AddDirectoryUtilAsSingleton();
+        services.AddSingleton<ITailwindManifestSuiteGeneratorWriteRunner, TailwindManifestSuiteGeneratorWriteRunner>();
         services.AddHostedService<ConsoleHostedService>();
     }
 }
