@@ -1098,7 +1098,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         if (IsBareArbitraryValue(token))
             return false;
 
-        if (HasUnbracketedDot(token))
+        if (HasInvalidUnbracketedDot(token))
             return false;
 
         if (HasDisallowedTailwindChars(token))
@@ -1129,7 +1129,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         return token.Length >= 2 && token[0] == '[' && token[^1] == ']';
     }
 
-    private static bool HasUnbracketedDot(ReadOnlySpan<char> token)
+    private static bool HasInvalidUnbracketedDot(ReadOnlySpan<char> token)
     {
         var bracketDepth = 0;
 
@@ -1147,13 +1147,21 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
                         bracketDepth--;
                     break;
                 case '.':
-                    if (bracketDepth == 0)
+                    if (bracketDepth == 0 && !IsDecimalSeparator(token, i))
                         return true;
                     break;
             }
         }
 
         return false;
+    }
+
+    private static bool IsDecimalSeparator(ReadOnlySpan<char> token, int index)
+    {
+        return index > 0
+               && index < token.Length - 1
+               && char.IsDigit(token[index - 1])
+               && char.IsDigit(token[index + 1]);
     }
 
     private static bool HasDisallowedTailwindChars(ReadOnlySpan<char> token)
