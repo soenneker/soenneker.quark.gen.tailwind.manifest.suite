@@ -79,6 +79,15 @@ public sealed class TailwindManifestSuiteGeneratorTests : UnitTest
         classes.Should().Contain("top-[calc(var(--header-height)+1rem)]");
     }
 
+    [Test]
+    public void TryEvaluateRuntimeChain_handles_hidden_builder_variant_properties()
+    {
+        List<string> classes = EvaluateClasses(("BorderColor", []), ("Transparent", []), ("OnFocusVisible", []), ("Ring", []));
+
+        classes.Should().Contain("border-transparent");
+        classes.Should().Contain("focus-visible:border-ring");
+    }
+
     private static List<string> EvaluateClasses(params (string Name, string[] Args)[] segments)
     {
         return EvaluateClasses("Quark", segments);
