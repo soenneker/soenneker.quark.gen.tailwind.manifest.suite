@@ -1,18 +1,17 @@
 using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
 
 namespace Soenneker.Quark.Gen.Tailwind.Manifest.Suite;
 
 /// <summary>
-/// Represents the tailwind manifest suite generator generator.
+/// Provides the analyzer entry point for the Quark suite Tailwind manifest build package.
 /// </summary>
 [Generator]
 public sealed class TailwindManifestSuiteGeneratorGenerator : IIncrementalGenerator
 {
     /// <summary>
-    /// Initializes the Tailwind Manifest Suite Generator Generator so it is ready for use.
+    /// Initializes the analyzer entry point. Suite manifest generation is performed by the package's MSBuild task.
     /// </summary>
-    /// <param name="context">HTTP context containing the Authorization header.</param>
+    /// <param name="context">The incremental generator initialization context.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
     }
