@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks;
 
+/// <inheritdoc cref="ITailwindManifestSuiteGeneratorWriteRunner" />
 public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwindManifestSuiteGeneratorWriteRunner
 {
     private const string _suiteManifestFileName = "quark-suite-tailwind-manifest.txt";
