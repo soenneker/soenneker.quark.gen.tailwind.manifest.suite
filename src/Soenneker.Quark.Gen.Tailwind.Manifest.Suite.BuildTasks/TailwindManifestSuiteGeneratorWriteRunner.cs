@@ -191,7 +191,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
             "Suite Tailwind manifest scan complete: {FileCount} files scanned, {ClassCount} class names (TailwindPrefix={TailwindPrefixCount}, ComponentCode={ComponentCodeCount}, Razor={RazorCount}), output {OutputPath}.",
             totalFilesScanned, final.Count, tailwindPrefixClasses, componentCodeClasses, razorClasses, outputPath);
 
-        if (final.Count > 0)
+        if (final.Count > 0 && _logger.IsEnabled(LogLevel.Information))
         {
             int sampleCount = Math.Min(15, final.Count);
             _logger.LogInformation("Sample class names: {SampleClasses}", string.Join(", ", final.GetRange(0, sampleCount)));
@@ -721,7 +721,10 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
             int cursor = SkipWhitespace(text, rootEnd);
 
             if (cursor >= text.Length || text[cursor] != '.')
+            {
+                i = rootEnd - 1;
                 continue;
+            }
 
             var segments = new List<ChainSegment>(4);
             int end = cursor;
@@ -738,7 +741,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
                 int nameEnd = ReadIdentifier(text, cursor);
                 string name = text.Substring(nameStart, nameEnd - nameStart);
                 cursor = SkipWhitespace(text, nameEnd);
-                var args = new List<string>(2);
+                List<string> args;
 
                 if (cursor < text.Length && text[cursor] == '(')
                 {
@@ -747,6 +750,10 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
 
                     args = SplitArguments(argsText!);
                     cursor = closeIndex + 1;
+                }
+                else
+                {
+                    args = new List<string>();
                 }
 
                 segments.Add(new ChainSegment(name, args));
@@ -829,6 +836,9 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
     private void LogClasses(string tag, string file, HashSet<string> classNames, int added, string? prefix = null, bool? responsive = null,
         string? className = null)
     {
+        if (!_logger.IsEnabled(LogLevel.Information))
+            return;
+
         var classList = new List<string>(classNames);
         classList.Sort(StringComparer.Ordinal);
 
@@ -1257,64 +1267,20 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         if (span.Length == 0 || span[0] == '@')
             return;
 
-        var hasStrongToken = false;
-        var tokenCount = 0;
         var i = 0;
-
         while (i < span.Length)
         {
             while (i < span.Length && char.IsWhiteSpace(span[i]))
                 i++;
-
             int start = i;
-
             while (i < span.Length && !char.IsWhiteSpace(span[i]))
                 i++;
-
-            if (i <= start)
-                continue;
-
-            tokenCount++;
-
-            ReadOnlySpan<char> tok = span[start..i];
-            if (IsValidTailwindClassToken(tok))
-                hasStrongToken = true;
-        }
-
-        if (tokenCount == 0)
-            return;
-
-        if (tokenCount == 1)
-        {
-            ReadOnlySpan<char> single = span.Trim();
-            if (IsValidTailwindClassToken(single))
-                target.Add(single.ToString());
-            return;
-        }
-
-        if (!hasStrongToken)
-            return;
-
-        i = 0;
-
-        while (i < span.Length)
-        {
-            while (i < span.Length && char.IsWhiteSpace(span[i]))
-                i++;
-
-            int start = i;
-
-            while (i < span.Length && !char.IsWhiteSpace(span[i]))
-                i++;
-
             if (i <= start)
                 continue;
 
             ReadOnlySpan<char> token = span[start..i];
-            if (!IsValidTailwindClassToken(token))
-                continue;
-
-            target.Add(token.ToString());
+            if (IsValidTailwindClassToken(token))
+                target.Add(token.ToString());
         }
     }
 
