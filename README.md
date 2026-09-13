@@ -28,6 +28,8 @@ The build writes `tailwind/quark-suite-tailwind-manifest.txt`. Package that file
 
 The manifest is replaced on subsequent builds and should not be edited manually. Classes assembled exclusively from runtime data cannot be discovered and must be supplied explicitly by the library.
 
+This output is a list of complete utility class names, not CSS. The consuming app's `Soenneker.Quark.Gen.Tailwind` build combines the library manifest with the app's source classes, its `Tailwind.Manifest` output, and theme tokens to compile the stylesheet. Quark packages its suite manifest for this purpose; a normal application does not need to regenerate the suite itself. See the [complete generator workflow](https://quark.soenneker.com/generators).
+
 ## Configuration
 
 Generation is enabled by default. Disable it or redirect its output with MSBuild properties:
