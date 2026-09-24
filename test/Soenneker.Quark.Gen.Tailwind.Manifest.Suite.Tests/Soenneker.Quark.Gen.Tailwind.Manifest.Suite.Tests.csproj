@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
@@ -14,6 +14,9 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" />
         <ProjectReference Include="..\..\src\Soenneker.Quark.Gen.Tailwind.Manifest.Suite\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AwesomeAssertions" Version="9.6.0" />
     </ItemGroup>
 </Project>
 
