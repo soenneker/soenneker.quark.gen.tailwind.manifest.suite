@@ -8,6 +8,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <DevelopmentDependency>true</DevelopmentDependency>
+        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddBuildTasksOutputToPackage</TargetsForTfmSpecificContentInPackage>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -46,7 +47,6 @@
     <ItemGroup>
         <None Include="Soenneker.Quark.Gen.Tailwind.Manifest.Suite.targets" Pack="true" PackagePath="build\" />
         <None Include="Soenneker.Quark.Gen.Tailwind.Manifest.Suite.targets" Pack="true" PackagePath="buildTransitive\" />
-        <None Include="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\**\*.*" Pack="true" PackagePath="buildTransitive\%(RecursiveDir)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -57,13 +57,34 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" PrivateAssets="all" />
     </ItemGroup>
+    <PropertyGroup>
+        <TailwindManifestSuiteNativeRuntimeIdentifier Condition="'$(TailwindManifestSuiteNativeRuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</TailwindManifestSuiteNativeRuntimeIdentifier>
+        <TailwindManifestSuiteNativeArtifactsDir Condition="'$(TailwindManifestSuiteNativeArtifactsDir)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../artifacts/native'))</TailwindManifestSuiteNativeArtifactsDir>
+        <_TailwindManifestSuiteNativeExecutable>Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks</_TailwindManifestSuiteNativeExecutable>
+        <_TailwindManifestSuiteNativeExecutable Condition="$([System.String]::Copy('$(TailwindManifestSuiteNativeRuntimeIdentifier)').StartsWith('win-'))">$(_TailwindManifestSuiteNativeExecutable).exe</_TailwindManifestSuiteNativeExecutable>
+    </PropertyGroup>
 
-    <Target Name="BuildBuildTasksToolOnBuild" BeforeTargets="Build" Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')">
-        <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Build" Properties="Configuration=$(Configuration);NoBuild=false" BuildInParallel="true" />
+    <Target Name="BuildBuildTasksTool" BeforeTargets="Build"
+            Condition="'$(TailwindManifestSuiteUsePrebuiltNativeTools)' != 'true'"
+            Inputs="@(TailwindManifestSuiteNativeSource);../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/obj/project.assets.json"
+            Outputs="$(TailwindManifestSuiteNativeArtifactsDir)/$(TailwindManifestSuiteNativeRuntimeIdentifier)/$(_TailwindManifestSuiteNativeExecutable)">
+        <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)/../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj&quot; --configuration Release --runtime $(TailwindManifestSuiteNativeRuntimeIdentifier) --output &quot;$(TailwindManifestSuiteNativeArtifactsDir)/$(TailwindManifestSuiteNativeRuntimeIdentifier)&quot;" />
     </Target>
 
-    <Target Name="BuildBuildTasksTool" BeforeTargets="Pack" Condition="'$(IsPackable)' == 'true'">
-        <MSBuild Projects="..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.csproj" Targets="Build" Properties="Configuration=$(Configuration);NoBuild=false" BuildInParallel="true" />
-        <Error Condition="!Exists('..\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks\bin\$(Configuration)\Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.dll')" Text="BuildTasks output missing. Aborting pack to avoid publishing a broken package." />
+    <ItemGroup>
+        <TailwindManifestSuiteNativeSource Include="../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/**/*.cs;../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/*.csproj"
+                             Exclude="../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/bin/**;../Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks/obj/**" />
+    </ItemGroup>
+
+    <Target Name="AddBuildTasksOutputToPackage" DependsOnTargets="BuildBuildTasksTool">
+        <ItemGroup>
+            <_TailwindManifestSuiteRequiredRuntime Include="win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64" Condition="'$(TailwindManifestSuiteUsePrebuiltNativeTools)' == 'true'" />
+            <_TailwindManifestSuiteNativeFile Include="$(TailwindManifestSuiteNativeArtifactsDir)/**/*"
+                                Exclude="$(TailwindManifestSuiteNativeArtifactsDir)/**/*.pdb;$(TailwindManifestSuiteNativeArtifactsDir)/**/*.dbg;$(TailwindManifestSuiteNativeArtifactsDir)/**/*.dSYM/**" />
+            <TfmSpecificPackageFile Include="@(_TailwindManifestSuiteNativeFile)" PackagePath="tools/native/" />
+        </ItemGroup>
+        <Error Condition="'@(_TailwindManifestSuiteRequiredRuntime)' != '' and !Exists('$(TailwindManifestSuiteNativeArtifactsDir)/%(_TailwindManifestSuiteRequiredRuntime.Identity)/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks') and !Exists('$(TailwindManifestSuiteNativeArtifactsDir)/%(_TailwindManifestSuiteRequiredRuntime.Identity)/Soenneker.Quark.Gen.Tailwind.Manifest.Suite.BuildTasks.exe')"
+               Text="Missing native tailwind.manifest.suite tool for %(_TailwindManifestSuiteRequiredRuntime.Identity)." />
+        <Error Condition="'@(_TailwindManifestSuiteNativeFile)' == ''" Text="Native tailwind.manifest.suite tools are missing. Publish BuildTasks before packing." />
     </Target>
 </Project>
