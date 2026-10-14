@@ -42,4 +42,9 @@
               StandardErrorImportance="high"
               Command='&quot;$(TailwindManifestSuiteBuildTasksExecutablePath)&quot; --projectDir &quot;$(_TailwindManifestSuiteProjectDir)&quot;$(_TailwindManifestSuiteOutputArg)' />
     </Target>
+    <Target Name="ValidateSoennekerQuarkGenTailwindManifestSuiteTargetFramework" BeforeTargets="PrepareForBuild;CoreCompile"
+            Condition="'$(TargetFramework)' != '' and '$(IsCrossTargetingBuild)' != 'true'">
+        <Error Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp' or !$([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '10.0'))"
+               Text="Soenneker.Quark.Gen.Tailwind.Manifest.Suite requires a consumer targeting .NET 10 or later. Current target: $(TargetFramework)." />
+    </Target>
 </Project>
