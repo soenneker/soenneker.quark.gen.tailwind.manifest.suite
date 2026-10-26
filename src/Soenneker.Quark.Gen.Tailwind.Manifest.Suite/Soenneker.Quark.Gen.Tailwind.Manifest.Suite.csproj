@@ -13,7 +13,7 @@
 
     <PropertyGroup>
         <Description>A generator that builds a manifest of tailwind usage in the Soenneker.Quark.Suite project</Description>
-        <Version Condition="'$(BUILD_VERSION)' == ''">4.0.0</Version>
+        <Version Condition="'$(BUILD_VERSION)' == ''">11.0.0</Version>
         <Version Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</Version>
         <AssemblyName>Soenneker.Quark.Gen.Tailwind.Manifest.Suite</AssemblyName>
         <PackageId>Soenneker.Quark.Gen.Tailwind.Manifest.Suite</PackageId>
