@@ -214,7 +214,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
             return;
 
         _logger.LogInformation("Writing suite Tailwind manifest to {OutputPath}.", outputPath);
-        await _fileUtil.Write(outputPath, contents, cancellationToken: cancellationToken)
+        await _fileUtil.WriteAtomically(outputPath, contents, cancellationToken: cancellationToken)
                        .NoSync();
     }
 
