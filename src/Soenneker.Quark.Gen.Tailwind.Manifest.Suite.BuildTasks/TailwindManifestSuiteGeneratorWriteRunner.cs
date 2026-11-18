@@ -1083,7 +1083,7 @@ public sealed partial class TailwindManifestSuiteGeneratorWriteRunner : ITailwin
         if (token.StartsWith(prefix + "-", StringComparison.Ordinal))
             return token;
 
-        if (prefix.EndsWith("-", StringComparison.Ordinal) || prefix.EndsWith(":", StringComparison.Ordinal))
+        if (prefix.EndsWith('-') || prefix.EndsWith(':'))
             return prefix + token;
 
         if (string.Equals(prefix, token, StringComparison.Ordinal))
